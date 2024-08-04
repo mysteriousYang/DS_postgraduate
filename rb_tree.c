@@ -3,6 +3,23 @@
 #include<stdlib.h>
 #include"rb_tree.h"
 
+
+//结点构造函数
+inline rb_tree_node* _rb_tree_node_constructor() {
+	rb_tree_node* _self = new(rb_tree_node);
+	if (_self == NULL) {
+		raise(MemoryOut);
+	}
+
+	_self->Lchild = NULL;
+	_self->Rchild = NULL;
+	_self->_data_ptr = NULL;
+
+	_self->color = rb_tree_red;
+	return _self;
+}
+
+
 //给定一个起始结点,寻找其最小值
 rb_tree_node* _rb_tree_node_minimum(rb_tree_node* _node) {
 	while (_node->Lchild != NULL) {
@@ -28,46 +45,48 @@ bool_t _rb_tree_node_equal(rb_tree_node* _L, rb_tree_node* _R) {
 
 
 //迭代器自增
-void _rb_tree_iterator_inc(rb_tree_iterator* _self) {
+rb_tree_iterator _rb_tree_iterator_inc(rb_tree_iterator _self) {
 	//若右子树存在,则前往右子树的最左结点
-	if (_self->_node_ptr->Rchild != NULL) {
-		_self->_node_ptr = _self->_node_ptr->Rchild;
-		while (_self->_node_ptr->Lchild != NULL) {
-			_self->_node_ptr = _self->_node_ptr->Lchild;
+	if (_self->Rchild != NULL) {
+		_self = _self->Rchild;
+		while (_self->Lchild != NULL) {
+			_self = _self->Lchild;
 		}
 	}
 	else {
 		//右子树不存在，寻找向上回溯其中序后继
-		rb_tree_node* _temp = _self->_node_ptr->parent;
-		while (_self->_node_ptr != _temp->Rchild) {
-			_self->_node_ptr = _temp;
+		rb_tree_node* _temp = _self->parent;
+		while (_self != _temp->Rchild) {
+			_self = _temp;
 			_temp = _temp->parent;
 		}
 		//这里用来处理直接从右子树爬到根的情况
 		//例如中序遍历的最后一个结点
-		if (_self->_node_ptr->Rchild != _temp) {
-			_self->_node_ptr = _temp;
+		if (_self->Rchild != _temp) {
+			_self = _temp;
 		}
 	}
+	return _self;
 }
 
 
 //迭代器自减
-void _rb_tree_iterator_dec(rb_tree_iterator* _self) {
-	if (_self->_node_ptr->Lchild != NULL) {
-		_self->_node_ptr = _self->_node_ptr->Lchild;
-		while (_self->_node_ptr->Rchild != NULL) {
-			_self->_node_ptr = _self->_node_ptr->Rchild;
+rb_tree_iterator _rb_tree_iterator_dec(rb_tree_iterator _self) {
+	if (_self->Lchild != NULL) {
+		_self = _self->Lchild;
+		while (_self->Rchild != NULL) {
+			_self = _self->Rchild;
 		}
 	}
 	else {
-		rb_tree_node* _temp = _self->_node_ptr->parent;
-		while (_self->_node_ptr != _temp->Lchild) {
-			_self->_node_ptr = _temp;
+		rb_tree_node* _temp = _self->parent;
+		while (_self != _temp->Lchild) {
+			_self = _temp;
 			_temp = _temp->parent;
 		}
-		_self->_node_ptr = _temp;
+		_self = _temp;
 	}
+	return _self;
 }
 
 
@@ -190,7 +209,7 @@ void _rb_tree_in_rebal(rb_tree_node* _in_node, rb_tree_node* _root) {
 				}
 				//情况5
 				_in_node->color = rb_tree_black;
-				_in_node->parent->parent = rb_tree_red;
+				_in_node->parent->parent->color = rb_tree_red;
 				_rb_tree_R_rotate(_in_node->parent->parent, _root);
 			}
 		}
@@ -221,6 +240,185 @@ void _rb_tree_in_rebal(rb_tree_node* _in_node, rb_tree_node* _root) {
 		//情况0 插入根结点
 		_root->color = rb_tree_black;
 	}
+}
+
+
+//删除操作的重平衡
+inline rb_tree_node* _rb_tree_rm_rebal(
+	rb_tree_node* _z,
+	rb_tree_node** _ptr_root,
+	rb_tree_node** _ptr_leftmost,
+	rb_tree_node** _ptr_rightmost) 
+{
+	rb_tree_node* _y = _z;
+	rb_tree_node* _x = NULL;
+	rb_tree_node* _x_parent = NULL;
+
+	if (_y->Lchild == NULL) {
+		_x = _y->Rchild;
+	}
+	else {
+		if (_y->Rchild == NULL) {
+			_x = _y->Lchild;
+		}
+		else {
+			_y = _y->Rchild;
+			while (_y->Lchild!=NULL){
+				_y = _y->Lchild;
+			}
+			_x = _y->Rchild;
+		}
+	}
+	if (_y != _z) {
+		_z->Lchild->parent = _y;
+		_y->Lchild = _z->Lchild;
+		if (_y != _z->Rchild) {
+			_x_parent = _y->parent;
+			if (_x != NULL) {
+				_x->parent = _y->parent;
+			}
+			_y->parent->Lchild = _x;
+			_y->Rchild = _z->Rchild;
+			_z->Rchild->parent = _y;
+		}
+		else {
+			_x_parent = _y;
+		}
+		if (*_ptr_root == _z) {
+			*_ptr_root = _y;
+		}
+		else if(_z->parent->Lchild == _z){
+			_z->parent->Lchild = _y;
+		}
+		else {
+			_z->parent->Rchild = _y;
+			_y->parent = _z->parent;
+
+			rb_tree_color _temp = _y->color;
+			_y->color = _z->color;
+			_z->color = _temp;
+
+			_y = _z;
+		}
+	}
+	else {
+		_x_parent = _y->parent;
+		if (_x != NULL) {
+			_x->parent = _y->parent;
+		}
+		if (*_ptr_root == _z) {
+			*_ptr_root = _x;
+		}
+		else {
+			if (_z->parent->Lchild == _x) {
+				_z->parent->Lchild = _x;
+			}
+			else {
+				_z->parent->Rchild = _x;
+			}
+		}
+		if (*_ptr_leftmost == _z) {
+			if (_z->Rchild == 0) {
+				*_ptr_leftmost = _z->parent;
+			}
+			else {
+				*_ptr_leftmost = _rb_tree_node_minimum(_x);
+			}
+		}
+		if (*_ptr_rightmost == _z) {
+			if (_z->Lchild == NULL) {
+				*_ptr_rightmost = _z->parent;
+			}
+			else{
+				*_ptr_rightmost = _rb_tree_node_maximum(_x);
+			}
+		}
+	}
+
+	if (_y->color != rb_tree_red) {
+		while(_x != *_ptr_root
+			&&(_x==NULL || _x->color==rb_tree_black))
+		{ 
+			if (_x == _x_parent->Lchild) {
+				rb_tree_node* _w = _x_parent->Rchild;
+				if (_w->color == rb_tree_red) {
+					_w->color = rb_tree_black;
+					_x_parent->color = rb_tree_red;
+					_rb_tree_L_rotate(_x_parent, *_ptr_root);
+					_w = _x_parent->Rchild;
+				}
+				if ((_w->Lchild == NULL ||
+					_w->Lchild->color == rb_tree_black) &&
+					(_w->Rchild == NULL ||
+					_w->Rchild->color == rb_tree_black))
+				{
+					_w->color = rb_tree_red;
+					_x = _x_parent;
+					_x_parent = _x_parent->parent;
+				}
+				else {
+					if (_w->Rchild == NULL ||
+						_w->Rchild->color == rb_tree_black)
+					{
+						if (_w->Lchild != NULL) {
+							_w->Lchild->color = rb_tree_black;
+						}
+						_w->color = rb_tree_red;
+						_rb_tree_R_rotate(_w, *_ptr_root);
+						_w = _x_parent->Rchild;
+					}
+				}
+				_w->color = _x_parent->color;
+				_x_parent->color = rb_tree_black;
+				if (_w->Rchild != NULL) {
+					_w->Rchild->color = rb_tree_black;
+				}
+				_rb_tree_L_rotate(_x_parent, *_ptr_root);
+				break;
+			}
+			else {
+				rb_tree_node* _w = _x_parent->Lchild;
+				if (_w->color == rb_tree_red) {
+					_w->color = rb_tree_black;
+					_x_parent->color = rb_tree_red;
+					_rb_tree_R_rotate(_x_parent, *_ptr_root);
+					_w = _x_parent->Lchild;
+				}
+				if ((_w->Rchild == NULL ||
+					_w->Rchild->color == rb_tree_black) &&
+					(_w->Lchild == NULL ||
+					_w->Lchild->color == rb_tree_black))
+				{
+					_w->color = rb_tree_red;
+					_x = _x_parent;
+					_x_parent = _x_parent->parent;
+				}
+				else {
+					if (_w->Lchild == NULL ||
+						_w->Lchild->color == rb_tree_black)
+					{
+						if (_w->Rchild != NULL) {
+							_w->Rchild->color = rb_tree_black;
+						}
+						_w->color = rb_tree_red;
+						_rb_tree_L_rotate(_w, *_ptr_root);
+						_w = _x_parent->Lchild;
+					}
+					_w->color = _x_parent->color;
+					_x_parent->color = rb_tree_black;
+					if (_w->Lchild != NULL) {
+						_w->Lchild->color = rb_tree_black;
+					}
+					_rb_tree_R_rotate(_x_parent, *_ptr_root);
+					break;
+				}
+			}
+		}
+		if (_x != NULL) {
+			_x->color = rb_tree_black;
+		}
+	}
+	return _y;
 }
 
 #endif // !_MY_DS_RBTREE_C

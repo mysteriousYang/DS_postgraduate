@@ -55,3 +55,6 @@ dkms.conf
 /考研数据结构_C.vcxproj.filters
 /考研数据结构_C.vcxproj.user
 /.vs/考研数据结构_C/v17
+/.vs/考研数据结构_C/FileContentIndex
+/x64/Debug
+/stl_tree.h
