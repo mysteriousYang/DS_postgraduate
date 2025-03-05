@@ -8,7 +8,7 @@
 
 
 //动态数组的构造函数
-inline vector* vector_constructor() {
+vector* vector_constructor() {
 	vector* _self = new(vector);
 	if (_self == NULL) {
 		raise(MemoryOut);
@@ -29,7 +29,7 @@ inline vector* vector_constructor() {
 
 
 //带预分配的接口
-inline vector* vector_reserve_constructor(size_t _capacity) {
+vector* vector_reserve_constructor(size_t _capacity) {
 	vector* _self = new(vector);
 	if (_self == NULL) {
 		raise(MemoryOut);
@@ -47,6 +47,22 @@ inline vector* vector_reserve_constructor(size_t _capacity) {
 	_self->end = _self->begin + _self->size;
 
 	return _self;
+}
+
+
+//动态数组复制构造函数
+vector* vector_clone(vector* _src) {
+	vector* dst = vector_reserve_constructor(_src->_capacity);
+
+	dst->size = _src->size;
+	dst->_capacity = _src->_capacity;
+
+	memcpy(dst->data, _src->data, _src->_capacity);
+
+	dst->begin = dst->data;
+	dst->end = dst->data + dst->size;
+
+	return dst;
 }
 
 

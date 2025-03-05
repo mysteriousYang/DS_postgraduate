@@ -41,6 +41,7 @@ ElemType	single_list_front(single_list* _self);
 void		single_list_remove(single_list* _self, single_list_iterator _it);
 void		single_list_print(single_list* _self);
 void		single_list_destory(single_list* _self);
+void		single_list_test();
 
 single_list_iterator
 single_list_find(single_list* _self, ElemType _data);

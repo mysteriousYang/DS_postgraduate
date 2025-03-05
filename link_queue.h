@@ -19,6 +19,7 @@ ElemType	link_queue_back(link_queue* _self);
 ElemType	link_queue_front(link_queue* _self);
 void		link_queue_push(link_queue* _self, ElemType _data);
 void		link_queue_pop(link_queue* _self);
+void		link_queue_destory(link_queue* _self);
+void		link_queue_test();
 
 #endif // !_MY_DS_LINK_QUEUE_H_
-

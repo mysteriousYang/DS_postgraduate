@@ -24,6 +24,7 @@ struct vector {
 
 vector*		vector_constructor();
 vector*		vector_reserve_constructor(size_t _capacity);
+vector*		vector_clone(vector* _src);
 bool_t		vector_empty(vector* _self);
 void		vector_push_back(vector* _self, ElemType _data);
 ElemType	vector_back(vector* _self);

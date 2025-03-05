@@ -19,6 +19,8 @@ bool_t		link_stack_empty(link_stack* _self);
 void		link_stack_push(link_stack* _self, ElemType _data);
 void		link_stack_pop(link_stack* _self);
 ElemType	link_stack_back(link_stack* _self);
+void		link_stack_destory(link_stack* _self);
+void		link_stack_test();
 
 
 #endif //_MY_DS_LINK_STACK_H_

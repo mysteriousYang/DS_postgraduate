@@ -86,7 +86,7 @@ ElemType single_list_back(single_list* _self) {
 	if (single_list_empty(_self)) {
 		raise(Underflow);
 	}
-	return *single_list_find_successor(_self, _self->end)->_data_ptr;
+	return *single_list_find_pioneer(_self, _self->end)->_data_ptr;
 }
 
 
@@ -200,6 +200,21 @@ single_list_find_pioneer(single_list* _self, single_list_iterator _node) {
 single_list_iterator
 single_list_find_successor(single_list* _self, single_list_iterator _node) {
 	return single_list_iterator_inc(_node);
+}
+
+
+//µ¥Á´±í²âÊÔº¯Êý
+void single_list_test() {
+	single_list* L = single_list_constructor();
+
+	int arr[] = { 1,2,3,4,5,6 };
+	for (int i = 0; i < 6; ++i) {
+		single_list_push_front(L, arr[i]);
+	}
+	single_list_pop_back(L);
+
+	single_list_print(L);
+	single_list_destory(L);
 }
 
 
